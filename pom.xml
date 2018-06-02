@@ -18,7 +18,15 @@
         <skip.unit.tests>false</skip.unit.tests>
         <skip.integration.tests>true</skip.integration.tests>
         <itCoverageAgent></itCoverageAgent>
-        <jacoco-agent.destfile>${basedir}/../target/jacoco.exec</jacoco-agent.destfile>
+        <!--<jacoco-agent.destfile>${basedir}/../target/jacoco.exec</jacoco-agent.destfile>-->
+        <!--<jacoco-agent.output>${basedir}/../target/site/jacoco</jacoco-agent.output>-->
+        <code.coverage.module.data.folder>${project.build.directory}/../target/code-coverage-data</code.coverage.module.data.folder>
+        <code.coverage.module.report.folder>${project.build.directory}/../target/code-corage-report</code.coverage.module.report.folder>
+        <code.coverage.project.folder>${basedir}/../</code.coverage.project.folder>
+        <code.coverage.module1.data.folder>${basedir}/../module1/target/code-coverage-data</code.coverage.module1.data.folder>
+        <code.coverage.module2.data.folder>${basedir}/../module2/target/code-coverage-data</code.coverage.module2.data.folder>
+        <code.coverage.overall.data.folder>${basedir}/../target/aggregate.exec</code.coverage.overall.data.folder>
+        <code.coverage.overall.report.folder>${basedir}/../target/site/jacoco</code.coverage.overall.report.folder>
     </properties>
 
     <profiles>
@@ -83,7 +91,7 @@
                 </executions>
             </plugin>
 
-            <!-- SKIPT unit test -->
+            <!-- UNIT test -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -122,6 +130,7 @@
                 </executions>
             </plugin>
 
+            <!-- For showing the profiles -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-help-plugin</artifactId>
@@ -149,16 +158,27 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.1</version>
-                <configuration>
-                    <destFile>${jacoco-agent.destfile}</destFile>
-                    <append>true</append>
-                </configuration>
                 <executions>
                     <execution>
                         <id>default-prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <destFile>${code.coverage.module.data.folder}/jacoco-ut.exec</destFile>
+                            <append>true</append>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>post-unit-test</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${code.coverage.module.data.folder}/jacoco-ut.exec</dataFile>
+                            <outputDirectory>${code.coverage.module.report.folder}/jacoco-ut</outputDirectory>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>pre-integration-test</id>
@@ -167,6 +187,56 @@
                         </goals>
                         <configuration>
                             <propertyName>itCoverageAgent</propertyName>
+                            <destFile>${code.coverage.module.data.folder}/jacoco-it.exec</destFile>
+                            <append>true</append>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${code.coverage.module.data.folder}/jacoco-it.exec</dataFile>
+                            <outputDirectory>${code.coverage.module.report.folder}/jacoco-it</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>merge-results</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${code.coverage.project.folder}</directory>
+                                    <includes>
+                                        <include>**/code-coverage-data/jacoco-ut.exec</include>
+                                        <include>**/code-coverage-data/jacoco-it.exec</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${code.coverage.overall.data.folder}/aggregate.exec</destFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report-aggregate</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>post-merge-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${code.coverage.overall.data.folder}/aggregate.exec</dataFile>
+                            <outputDirectory>${code.coverage.overall.report.folder}/jacoco-aggregate</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -182,21 +252,23 @@
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>3.0.4</version>
             </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <configuration>
-                    <dataFile>${jacoco-agent.destfile}</dataFile>
-                </configuration>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <!-- select non-aggregate reports -->
-                            <report>report</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.jacoco</groupId>-->
+                <!--<artifactId>jacoco-maven-plugin</artifactId>-->
+                <!--<configuration>-->
+                    <!--&lt;!&ndash;<dataFile>${code.coverage.tests.repository}</dataFile>&ndash;&gt;-->
+                    <!--<dataFile>${code.coverage.overall.data.folder}/aggregate.exec</dataFile>-->
+                    <!--<outputDirectory>${code.coverage.overall.report.folder}/jacoco-aggregate</outputDirectory>-->
+                <!--</configuration>-->
+                <!--<reportSets>-->
+                    <!--<reportSet>-->
+                        <!--<reports>-->
+                            <!--&lt;!&ndash; select non-aggregate reports &ndash;&gt;-->
+                            <!--<report>report</report>-->
+                        <!--</reports>-->
+                    <!--</reportSet>-->
+                <!--</reportSets>-->
+            <!--</plugin>-->
         </plugins>
     </reporting>
 
